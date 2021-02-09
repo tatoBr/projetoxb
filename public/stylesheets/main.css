@@ -1,0 +1,33 @@
+body {  
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  height: 100%;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  background-color: antiquewhite;
+}
+
+a {
+  color: #00B7FF;
+}
+
+.loginForm{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: white;
+  border: 1pt solid gray;
+  padding: 1rem; 
+}
+.loginForm label{
+  margin-top: 1rem;
+}
+.loginForm button{
+  margin: 1rem 0;
+}
+.error{
+  color: red;
+  text-align: center;
+}
