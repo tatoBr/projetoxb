@@ -6,7 +6,7 @@ const logger = require('morgan');
 const ejs = require( 'ejs' );
 
 const indexRouter = require('./routes/index');
-const usersRouter = require('./routes/users');
+//const usersRouter = require('./routes/users');
 const clientesRouter = require( './routes/clientes' );
 const conteudoRouter = require( './routes/conteudo' );
 
@@ -23,7 +23,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
+//app.use('/users', usersRouter);
 app.use('/clientes', clientesRouter );
 app.use( '/conteudo', conteudoRouter );
 
