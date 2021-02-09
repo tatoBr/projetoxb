@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+</head>
+<body>
+    <main>
+        <header><h1><%= cliente.nome %></h1></header>
+        <div>
+            <h2>Conteúdo deste cliente</h2>
+            <% if ( cliente.conteudo.length > 0 ) { %>
+                <ul>
+                    <% for( let i = 0; i < cliente.conteudo.length; i++ ) { %>
+                        <li>
+                            <h4><%= cliente.conteudo[i].titulo %></h4>                                                        
+                            <span><%= cliente.conteudo[i].status %></span>
+                            <a href="/conteudo/detalhes?idcliente=<%= cliente.id %>&conteudoindex=<%= i%>">detalhes</a>
+                        </li>
+                    <% } %>
+                </ul>
+            <% } else { %>
+                <p>Não há conteudo para ser mostrado.</p>
+            <% } %>
+        </div>
+        <form action="/conteudo/add" method="POST" style="display: flex; flex-direction: column; width: 60%;">
+            <header><h3>Adicionar novo conteudo</h3></header>
+            <input type="hidden" name="clienteId" value=<%= cliente.id %> />
+            <label for="Titulo">Título <input type="text" name="titulo" id="Titulo"/></label>
+            <label for="Detalhes">Detalhes</label><textarea name="detalhes" id="Detalhes" cols="30" rows="10"></textarea>
+            <button type="submit">Salvar</button>  
+        </form>
+    </main>
+</body>
+</html>

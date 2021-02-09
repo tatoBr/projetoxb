@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+</head>
+<body>
+    <% if ( clientes.length > 0 ) { %>
+        <h1>Lista de Clientes</h1>
+        <ul>
+            <% for( let cliente of clientes ) { %>
+                <li>Nome: <a href="/clientes/detalhes?id=<%= cliente.id %> "><%= cliente.nome %></a></li>
+            <% } %>
+        </ul>
+    <% } else { %>
+        <h1>Não há Clientes à Serem exibidos </h1>
+    <% } %>
+     
+    <form action="/clientes/add" method="POST">
+        <header><h1>Novo Cliente</h1></header>
+        <label for="Nome">Nome: <input type="text" name="nome" id="Nome"></label>
+        <button type="submit">Salvar</button>
+    </form>
+</body>
+</html>
