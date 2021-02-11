@@ -3,8 +3,13 @@ const router = express.Router();
 
 const controller = require( '../controllers/conteudo' );
 
-router.post('/add', controller.post_conteudo );
+// POST >> conteudo/add
+router.post('/add/:clienteId', controller.post_conteudo );
 
-router.get( '/detalhes', controller.get_detalhes );
+// GET >> conteudo/detalhes
+router.get( '/detalhes/:clienteId/:conteudoId', controller.get_conteudo );
+
+// Delete >> conteudo/delete
+router.delete( '/delete/:clienteId/:conteudoId', controller.delete_conteudo)
 
 module.exports = router;
