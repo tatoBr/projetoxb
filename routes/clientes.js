@@ -6,10 +6,15 @@ const router = express.Router();
 // GET > /clientes
 router.get( '/', controller.get_clientes );
 
-// POST > /clientes/
+// POST > /clientes/add
 router.post( '/add', controller.post_cliente );
 
-// GET > clientes/detalhes
-router.get( '/detalhes' , controller.get_detalhes );
+// DELETE /clientes/:clienteId
+router.delete( '/delete/:clienteId', controller.delete_cliente );
+
+// GET > /clientes/detalhes
+router.get( '/detalhes/:clienteId' , controller.get_detalhes );
+
+
 
 module.exports = router;
