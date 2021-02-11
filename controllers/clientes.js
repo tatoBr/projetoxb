@@ -6,7 +6,12 @@ const clientesDataPath = path.join( 'data', 'cliente.json' );
 const STATUS_CONTEUDO = { APROVADO: 0, EM_ANALISE: 2, REPROVADO: 3 };
 
 module.exports = {
-    get_clientes: async ( req, res )=>{         
+    get_clientes: async ( req, res )=>{
+        if( !fs.existsSync( path.join( 'data'))){
+            fsp.mkdir( path.join( 'data' ))
+            .then(()=> console.log( 'diretorio foi criado'))
+            .catch( err =>  res.status( 500 ).json({ response: 'Erro ao Cria diretório: ' + err.message }));          
+        }        
         fsp.readFile( clientesDataPath, 'utf-8' )
         .then( data => {
             let parsedData = null;
@@ -17,7 +22,7 @@ module.exports = {
             return res.status( 200 ).json({ response: parsedData });
         })        
         .catch( err => {                
-            if( err.code !== 'ENOENT') return res.status( 200 ).json({ response: [] })
+            if( err.code === 'ENOENT') return res.status( 200 ).json({ response: [] })
             else return res.status( 500 ).json({ response: `Erro ao ler arquivo: ${ err.message }`});     
         });     
     },
