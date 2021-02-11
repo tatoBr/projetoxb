@@ -19,8 +19,10 @@ module.exports = {
 
             try{ parsedData = JSON.parse( data )}
             catch( err ){ parsedData = [] }
-            
-            return res.status( 200 ).json({ response: parsedData });
+            let clientes = parsedData.map( cliente => {
+                return { id: cliente.id, nome: cliente.nome }
+            })
+            return res.status( 200 ).json({ response: clientes });
         })        
         .catch( err => {                
             if( err.code === 'ENOENT') return res.status( 200 ).json({ response: [] })
