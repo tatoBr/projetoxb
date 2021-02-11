@@ -11,7 +11,8 @@ module.exports = {
             fsp.mkdir( path.join( 'data' ))
             .then(()=> console.log( 'diretorio foi criado'))
             .catch( err =>  res.status( 500 ).json({ response: 'Erro ao Cria diretório: ' + err.message }));          
-        }        
+        }
+
         fsp.readFile( clientesDataPath, 'utf-8' )
         .then( data => {
             let parsedData = null;
@@ -67,6 +68,29 @@ module.exports = {
         });
     },
 
+    update_cliente: ( req, res )=>{
+        const { clienteId } = req.params;
+        const { nome } = req.body;
+
+        if( [ clienteId, nome ].includes( undefined )) return res.status( 400 ).json({ response:"Existem dados inválidos na sua requisição."});
+
+        fsp.readFile( clientesDataPath, 'utf-8' )
+        .then( data => {
+            try{ clientes = JSON.parse( data )}
+            catch( err ) { clientes = []}
+
+            if( !Array.isArray( clientes )) clientes = [];
+
+            let index = clientes.findIndex( cliente => cliente.id == clienteId );
+            if( index < 0 ) return res.status( 404 ).json({ response: `Cliente com id ${ clienteId } não encontrado.` });
+
+            clientes[index].nome = nome;
+            fsp.writeFile( clientesDataPath, JSON.stringify( clientes ), 'utf-8')
+            .then(() => res.status( 202 ).redirect( `/clientes/detalhes/${clienteId}`))
+            .catch( err => res.status( 500 ).json({ response: `Erro salvando arquivo: ${ err.message }`}))
+        })
+        .catch( err => res.status( 500 ).json({ response: `Erro ao ler arquivo: ${ err.message }`}));
+    },
     delete_cliente: async ( req, res )=>{
         const { clienteId } = req.params;
 
@@ -93,7 +117,7 @@ module.exports = {
         .catch( err => res.status( 500 ).json({ response: `Erro ao ler arquivo: ${ err.message }`}));
     },   
 
-    get_detalhes: async ( req, res )=>{
+    get_cliente: async ( req, res )=>{
         let { clienteId } = req.params;
         let clientes = null;
 
