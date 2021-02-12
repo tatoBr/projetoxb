@@ -1,6 +1,8 @@
 const fs = require( 'fs' );
 const fsp = require( 'fs/promises' );
 const path = require( 'path' );
+const { carregarClientes, salvarClientes } = require( '../util/fileSystemUtil' );
+
 const clientesDataPath = path.join( 'data', 'cliente.json' );
 
 const STATUS_CONTEUDO = { APROVADO: 'Aprovado', EM_ANALISE: 'Em Análise', REPROVADO: "Reprovado" };
@@ -14,147 +16,137 @@ module.exports = {
         if([ clienteId, titulo, detalhes ].includes( undefined ))
             return res.status( 400 ).json({ response:"Existem dados inválidos na sua requisição."});
 
-        fsp.readFile( clientesDataPath, 'utf-8')
-        .then( data => {
-            let clientes = null
+        try {
+            const clientes = await carregarClientes( clientesDataPath );
 
-            try { clientes = JSON.parse( data ) }
-            catch ( err ) { clientes = [] }
-
-            if( !Array.isArray( clientes )) clientes = [];
-
-            const index = clientes.findIndex( cliente => cliente.id == clienteId )
-            if( index < 0 ) return res.status( 404 ).json({ response: `Cliente com id ${ cliente_id } não encontrado.` })
+            const index = clientes.findIndex( cliente => cliente.id == clienteId );
+            if( index < 0 ) return res.status( 404 ).json({ response: `Cliente com id ${ clienteId } não encontrado.` });
 
             clientes[ index ].conteudo.push({
                 id: idconteudo,
                 titulo: titulo,
                 descricao: detalhes,
-                timeline: [{ data: new Date(), detalhes: `Primeira amostra do conteúdo ${ titulo } foi criada.`}],
-
+                timeline: [{ data: new Date(), detalhes: `Primeira amostra do conteúdo "${ titulo }" foi criada.`}],
                 status: STATUS_CONTEUDO.EM_ANALISE
             });
-            fsp.writeFile( clientesDataPath, JSON.stringify( clientes ), 'utf-8' )
-            .then(()=> res.status( 201 ).redirect( '/clientes' ))
-            .catch( err => res.status( 500 ).json({ response: `Erro salvando arquivo: ${ err.message }`}))
-        })
-        .catch( err => res.status( 500 ).json({ response: `Erro ao ler arquivo: ${ err.message }`}));        
+
+            const clientesSalvos = await salvarClientes( clientesDataPath, clientes );
+            res.status( 200 ).json({ response: clientesSalvos[ index ] });            
+
+        } catch ( err ) {
+            return res.status( 500 ).json({ response: `${ err.message }`})
+        }  
     },   
 
-    get_conteudo: ( req, res ) => {
-        const { clienteId, conteudoId } = req.params       
+    get_conteudo: async ( req, res ) => {
+        const { clienteId, conteudoId } = req.params;       
+       
+        if([ clienteId, conteudoId ].includes( undefined ))
+            return res.status( 400 ).json({ response:"Existem dados inválidos na sua requisição."});
+        
+        try {
+            const clientes = await carregarClientes( clientesDataPath );
 
-        fsp.readFile( clientesDataPath, 'utf-8')
-        .then( data => {
-            let clientes = null;
+            let cliIndex = clientes.findIndex( cliente => cliente.id == clienteId );
+            if( cliIndex < 0 ) return res.status( 404 ).json({ response: `Cliente com id ${ clienteId } não encontrado.` });
             
-            try { clientes = JSON.parse( data )}
-            catch ( err ) { clientes= []}
-
-            if( !Array.isArray( clientes )) clientes = []
-
-            const clienteIndex = clientes.findIndex( cliente => cliente.id == clienteId );            
-            if( clienteIndex < 0 ) return res.status( 404 ).json({ response: `Cliente com id ${ clienteId } não encontrado.`});
-
-            const conteudoIndex = clientes[ clienteIndex ].conteudo.findIndex( conteudo => conteudo.id == conteudoId )
-            if( conteudoIndex < 0 ) return res.status( 404 ).json({ response: `Conteúdo com id ${ conteudoId } não encontrado.`});
-
-            return res.status( 200 ).json({ 
-                responde: {
-                    id: clientes[ clienteIndex ].id,
-                    cliente: clientes[ clienteIndex ].nome,
-                    conteudo: clientes[ clienteIndex ].conteudo[ conteudoIndex ] || null
-                }
-            });
-        })
-        .catch( err => res.status( 500 ).json({ response: `Erro ao ler arquivo: ${ err.message }`}));        
+            let contIndex = clientes[ cliIndex ].conteudo.findIndex( conteudo => conteudo.id == conteudoId );
+            if( contIndex < 0 ) return res.status( 404 ).json({ response: `Conteúdo com id ${ conteudoId } não encontrado.` });
+            
+            return res.status( 200 ).json({ response: {
+                cliente: clientes[ cliIndex ].nome,
+                conteudo: clientes[ cliIndex ].conteudo[ contIndex ]
+            }});
+            
+        } catch ( err ) {
+            return res.status( 500 ).json({ response: `${ err.message }`});
+        }     
     },
 
     update_conteudo: async ( req, res )=>{
         const { clienteId, conteudoId } = req.params
-        const { titulo, descricao } = req.body
-
-        if( [clienteId, conteudoId, titulo, descricao ].includes( undefined ))
+        const { titulo, descricao } = req.body              
+       
+        if([ clienteId, conteudoId, titulo, descricao ].includes( undefined ))
             return res.status( 400 ).json({ response:"Existem dados inválidos na sua requisição."});
+        
+        try {
+            const clientes = await carregarClientes( clientesDataPath );
 
-        fsp.readFile( clientesDataPath, 'utf-8' )
-        .then( data => {
-            let clientes = null;
+            let cliIndex = clientes.findIndex( cliente => cliente.id == clienteId );
+            if( cliIndex < 0 ) return res.status( 404 ).json({ response: `Cliente com id ${ clienteId } não encontrado.` });
             
-            try { clientes = JSON.parse( data )}
-            catch ( err ) { clientes= []}
-
-            if( !Array.isArray( clientes )) clientes = [];
-
-            const clienteIndex = clientes.findIndex( cliente => cliente.id == clienteId );            
-            if( clienteIndex < 0 ) return res.status( 404 ).json({ response: `Cliente com id ${ clienteId } não encontrado.`});
-
-            const conteudoIndex = clientes[ clienteIndex ].conteudo.findIndex( conteudo => conteudo.id == conteudoId )
-            if( conteudoIndex < 0 ) return res.status( 404 ).json({ response: `Conteúdo com id ${ conteudoId } não encontrado.`});
-
-            clientes[clienteIndex].conteudo[ conteudoIndex ].titulo = titulo;
-            clientes[clienteIndex].conteudo[ conteudoIndex ].descricao = descricao;
-
-            fsp.writeFile( clientesDataPath, JSON.stringify( clientes ), 'utf-8' )
-            .then(() => res.status( 202 ).redirect( `/clientes/detalhes/${ clienteId }` ))
-            .catch(  err => res.status( 500 ).json({ response: `Erro ao salvar arquivo: ${ err.message }`}))
-        })
-        .catch(  err => res.status( 500 ).json({ response: `Erro ao Ler arquivo: ${ err.message }`}))        
+            let contIndex = clientes[ cliIndex ].conteudo.findIndex( conteudo => conteudo.id == conteudoId );
+            if( contIndex < 0 ) return res.status( 404 ).json({ response: `Conteúdo com id ${ conteudoId } não encontrado.` });
+            
+            clientes[ cliIndex ].conteudo[ contIndex ].titulo = titulo;
+            clientes[ cliIndex ].conteudo[ contIndex ].descricao = descricao
+            clientes[ cliIndex ].conteudo[ contIndex ].timeline[0].detalhes = `Primeira amostra do conteúdo '${ titulo }' foi criada.` 
+            
+            const clientesSalvos = await salvarClientes( clientesDataPath, clientes );
+            return res.status( 200 ).json({ response: {
+                cliente: clientesSalvos[ cliIndex ].nome,
+                conteudo: clientesSalvos[ cliIndex ].conteudo[ contIndex ]
+            }});            
+        } catch ( err ) {
+            return res.status( 500 ).json({ response: `${ err.message }`});
+        }      
     },
 
-    delete_conteudo: ( req, res )=>{
-        const { clienteId, conteudoId } = req.params;
-        fsp.readFile( clientesDataPath, 'utf-8')
-        .then( data => {
-            let clientes = null;
+    delete_conteudo: async ( req, res )=>{
+        const { clienteId, conteudoId } = req.params;       
+       
+        if([ clienteId, conteudoId ].includes( undefined ))
+            return res.status( 400 ).json({ response:"Existem dados inválidos na sua requisição."});
+        
+        try {
+            const clientes = await carregarClientes( clientesDataPath );
+
+            let cliIndex = clientes.findIndex( cliente => cliente.id == clienteId );
+            if( cliIndex < 0 ) return res.status( 404 ).json({ response: `Cliente com id ${ clienteId } não encontrado.` });
             
-            try { clientes = JSON.parse( data )}
-            catch ( err ) { clientes= []}
+            let contIndex = clientes[ cliIndex ].conteudo.findIndex( conteudo => conteudo.id == conteudoId );
+            if( contIndex < 0 ) return res.status( 404 ).json({ response: `Conteúdo com id ${ conteudoId } não encontrado.` });
+            
+            let removido = clientes[ cliIndex ].conteudo[ contIndex ]            
+            clientes[ cliIndex ].conteudo.splice( contIndex, 1 );
 
-            if( !Array.isArray( clientes )) clientes = [];
-
-            const clienteIndex = clientes.findIndex( cliente => cliente.id == clienteId );            
-            if( clienteIndex < 0 ) return res.status( 404 ).json({ response: `Cliente com id ${ clienteId } não encontrado.`});
-
-            const conteudoIndex = clientes[ clienteIndex ].conteudo.findIndex( conteudo => conteudo.id == conteudoId )
-            if( conteudoIndex < 0 ) return res.status( 404 ).json({ response: `Conteúdo com id ${ conteudoId } não encontrado.`});
-
-            clientes[clienteIndex].conteudo.splice( conteudoIndex, 1 );
-            fsp.writeFile( clientesDataPath, JSON.stringify( clientes ), 'utf-8')
-            .then(() => res.status( 202 ).json({ response: clientes }))
-            .catch( err => res.status( 500 ).json({ response: `Erro ao salvar arquivo: ${ err.message }`}))
-        })
-        .catch( err => res.status( 500 ).json({ response: `Erro ao ler arquivo: ${ err.message }`}))
+            const clientesSalvos = await salvarClientes( clientesDataPath, clientes );
+            
+            return res.status( 200 ).json({ response: {
+                cliente: clientesSalvos[ cliIndex ].nome,
+                conteudoRemovido: removido
+            }});
+            
+        } catch ( err ) {
+            return res.status( 500 ).json({ response: `${ err.message }`});
+        }        
     },
 
     add_to_timeline: async ( req, res ) => {
         const { clienteId, conteudoId } = req.params
         const { detalhes } = req.body;
 
-        if( [ clienteId, conteudoId, detalhes ].includes( undefined ))
-            return res.status( 400 ).json({ response:"Existem dados inválidos na sua requisição."});
+        try {
+            const clientes = await carregarClientes( clientesDataPath );
 
-        fsp.readFile( clientesDataPath, 'utf-8' )
-        .then( data => {
-            let clientes = null;
+            let cliIndex = clientes.findIndex( cliente => cliente.id == clienteId );
+            if( cliIndex < 0 ) return res.status( 404 ).json({ response: `Cliente com id ${ clienteId } não encontrado.` });
             
-            try { clientes = JSON.parse( data )}
-            catch ( err ) { clientes= []}
+            let contIndex = clientes[ cliIndex ].conteudo.findIndex( conteudo => conteudo.id == conteudoId );
+            if( contIndex < 0 ) return res.status( 404 ).json({ response: `Conteúdo com id ${ conteudoId } não encontrado.` });
+            
+            clientes[cliIndex].conteudo[ contIndex ].timeline.push({ data: new Date(), detalhes: detalhes });
 
-            if( !Array.isArray( clientes )) clientes = [];
+            const clientesSalvos = await salvarClientes( clientesDataPath, clientes );
 
-            const clienteIndex = clientes.findIndex( cliente => cliente.id == clienteId );            
-            if( clienteIndex < 0 ) return res.status( 404 ).json({ response: `Cliente com id ${ clienteId } não encontrado.`});
-
-            const conteudoIndex = clientes[ clienteIndex ].conteudo.findIndex( conteudo => conteudo.id == conteudoId )
-            if( conteudoIndex < 0 ) return res.status( 404 ).json({ response: `Conteúdo com id ${ conteudoId } não encontrado.`});
-
-            clientes[clienteIndex].conteudo[ conteudoIndex ].timeline.push({ data: new Date(), detalhes: detalhes });           
-
-            fsp.writeFile( clientesDataPath, JSON.stringify( clientes ), 'utf-8' )
-            .then(() => res.status( 202 ).redirect( `/clientes/detalhes/${ clienteId }` ))
-            .catch(  err => res.status( 500 ).json({ response: `Erro ao salvar arquivo: ${ err.message }`}))
-        })
-        .catch(  err => res.status( 500 ).json({ response: `Erro ao Ler arquivo: ${ err.message }`}))
+            return res.status( 200 ).json({ response: {
+                cliente: clientesSalvos[ cliIndex ].nome,
+                conteudo: clientesSalvos[ cliIndex ].conteudo[ contIndex ]
+            }});
+            
+        } catch ( err ) {
+            return res.status( 500 ).json({ response: `${ err.message }`});
+        }
     }
 }
