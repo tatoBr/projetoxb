@@ -67,7 +67,7 @@ module.exports = {
         const { clienteId, conteudoId } = req.params
         const { titulo, descricao } = req.body              
        
-        if([ clienteId, conteudoId, titulo, descricao ].includes( undefined ))
+        if([ clienteId, conteudoId ].includes( undefined ))
             return res.status( 400 ).json({ response:"Existem dados inválidos na sua requisição."});
         
         try {
@@ -79,15 +79,29 @@ module.exports = {
             let contIndex = clientes[ cliIndex ].conteudo.findIndex( conteudo => conteudo.id == conteudoId );
             if( contIndex < 0 ) return res.status( 404 ).json({ response: `Conteúdo com id ${ conteudoId } não encontrado.` });
             
-            clientes[ cliIndex ].conteudo[ contIndex ].titulo = titulo;
-            clientes[ cliIndex ].conteudo[ contIndex ].descricao = descricao
-            clientes[ cliIndex ].conteudo[ contIndex ].timeline[0].detalhes = `Primeira amostra do conteúdo '${ titulo }' foi criada.` 
-            
-            const clientesSalvos = await salvarClientes( clientesDataPath, clientes );
-            return res.status( 200 ).json({ response: {
-                cliente: clientesSalvos[ cliIndex ].nome,
-                conteudo: clientesSalvos[ cliIndex ].conteudo[ contIndex ]
-            }});            
+            let conteudoAlterado = 0;
+            for( let key in req.body ){
+                if( ['titulo', 'descricao', 'status'].includes( key ))
+                {
+                    if( req.body[ key ] ){
+                        clientes[ cliIndex ].conteudo[contIndex][key] = req.body[ key ];
+                        conteudoAlterado++
+                    }
+                }
+            }            
+            if( conteudoAlterado > 0 ){
+                const clientesSalvos = await salvarClientes( clientesDataPath, clientes );
+                return res.status( 200 ).json({ response: {
+                    cliente: clientesSalvos[ cliIndex ].nome,
+                    conteudo: clientesSalvos[ cliIndex ].conteudo[ contIndex ]
+                }});            
+            }
+            else{
+                return res.status( 200 ).json({ response: {
+                    cliente: clientes[ cliIndex ].nome,
+                    conteudo: clientes[ cliIndex ].conteudo[ contIndex ]
+                }});
+            }
         } catch ( err ) {
             return res.status( 500 ).json({ response: `${ err.message }`});
         }      
