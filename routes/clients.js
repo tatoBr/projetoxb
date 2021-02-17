@@ -7,7 +7,7 @@ const router = express.Router();
 router.get( '/', controller.getClients);
 
 // POST > /clients
-router.post( '/add', controller.postClient );
+router.post( '/', controller.postClient );
 
 // DELETE /clientes/:clienteId
 router.delete( '/:id', controller.deleteClient );
