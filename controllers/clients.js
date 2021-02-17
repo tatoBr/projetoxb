@@ -4,6 +4,9 @@ const { loadClients, saveClient, createDir } = require( '../util/fileSystemUtil'
 const { STATUS_CONTENT } = require( '../util/constants' );
 
 const clientsDataPath = path.join( 'data', 'clients.json' );
+const ClientService = require( '../services/clients' );
+const Client = require('../models/client');
+const service = new ClientService();
 
 module.exports = {
     getClients: async ( req, res )=>{
@@ -17,22 +20,24 @@ module.exports = {
     },
 
     postClient: async ( req, res )=>{
-        const { name } = req.body;
-        const id = uuid.v4();
-        let client = { id: id, name: name, content: [], status: STATUS_CONTENT.UNDER_ANALYSIS };
+        let response = await service.saveClients( req.body );
+        res.status( 202 ).json( response );
+        // const { name } = req.body;
+        // const id = uuid.v4();
+        // let client = { id: id, name: name, content: [], status: STATUS_CONTENT.UNDER_ANALYSIS };
 
-        if( !name ) return res.status( 400 ).json({ response:"Existem dados inválidos na sua requisição."})
+        // if( !name ) return res.status( 400 ).json({ response:"Existem dados inválidos na sua requisição."})
 
-        try {
-            await createDir( 'data' );
-            const clients = await loadClients( clientsDataPath );
-            clients.push( client );
-            const savedClients = await saveClient( clientsDataPath, clients );
-            return res.status( 201 ).json({ response: savedClients });
+        // try {
+        //     await createDir( 'data' );
+        //     const clients = await loadClients( clientsDataPath );
+        //     clients.push( client );
+        //     const savedClients = await saveClient( clientsDataPath, clients );
+        //     return res.status( 201 ).json({ response: savedClients });
 
-        } catch ( err ) {
-            return res.status( 500 ).json({ response: `ERROR: ${ err.message }` });
-        }
+        // } catch ( err ) {
+        //     return res.status( 500 ).json({ response: `ERROR: ${ err.message }` });
+        // }
     },
 
     updateClient: async ( req, res )=>{
