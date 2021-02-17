@@ -65,16 +65,16 @@ module.exports = {
     },
 
     getContent: async ( req, res ) => {
-        const { id: clienteId, contentId } = req.params;       
+        const { id: clientId, contentId } = req.params;       
        
-        if([ clienteId, contentId ].includes( undefined ))
+        if([ clientId, contentId ].includes( undefined ))
             return res.status( 400 ).json({ response:"Existem dados inválidos na sua requisição."});
         
         try {
             const clients = await loadClients( clientsDataPath );
 
-            let cliIndex = clients.findIndex( cliente => cliente.id == clienteId );
-            if( cliIndex < 0 ) return res.status( 404 ).json({ response: `Cliente com id ${ clienteId } não encontrado.` });
+            let cliIndex = clients.findIndex( cliente => cliente.id == clientId );
+            if( cliIndex < 0 ) return res.status( 404 ).json({ response: `Cliente com id ${ clientId } não encontrado.` });
             
             let contIndex = clients[ cliIndex ].content.findIndex( content => content.id == contentId );
             if( contIndex < 0 ) return res.status( 404 ).json({ response: `Conteúdo com id ${ contentId } não encontrado.` });
@@ -100,7 +100,7 @@ module.exports = {
             const clients = await loadClients( clientsDataPath );
 
             let cliIndex = clients.findIndex( clients => clients.id == clientId );
-            if( cliIndex < 0 ) return res.status( 404 ).json({ response: `Cliente com id ${ clienteId } não encontrado.` });
+            if( cliIndex < 0 ) return res.status( 404 ).json({ response: `Cliente com id ${ clientId } não encontrado.` });
             
             let contIndex = clients[ cliIndex ].content.findIndex( content => content.id == contentId );
             if( contIndex < 0 ) return res.status( 404 ).json({ response: `Conteúdo com id ${ contentId } não encontrado.` });
