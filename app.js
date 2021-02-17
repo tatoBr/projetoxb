@@ -7,8 +7,8 @@ const cors = require( 'cors' );
 
 const indexRouter = require('./routes/index');
 //const usersRouter = require('./routes/users');
-const clientesRouter = require( './routes/clientes' );
-const conteudoRouter = require( './routes/conteudo' );
+const clientsRouter = require( './routes/clients' );
+const contentRouter = require( './routes/content' );
 
 const app = express();
 
@@ -25,7 +25,7 @@ app.use( cors());
 
 app.use('/', indexRouter);
 //app.use('/users', usersRouter);
-app.use('/clientes', clientesRouter );
-app.use( '/conteudo', conteudoRouter );
+app.use('/clients', clientsRouter );
+app.use('/clients/:id/content', contentRouter );
 
 module.exports = app;

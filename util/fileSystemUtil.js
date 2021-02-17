@@ -3,7 +3,7 @@ const fsp = require( 'fs/promises' );
 
 
 module.exports = {
-    carregarClientes: async function ( path ) {
+    loadClients: async function ( path ) {
         try {
             const data = await fsp.readFile( path, 'utf-8' );
             const parsedData = JSON.parse( data );
@@ -14,16 +14,16 @@ module.exports = {
         }
     },
 
-    salvarClientes: async function (path, clientes) {
+    saveClient: async function (path, clients) {
         try {
-            await fsp.writeFile( path, JSON.stringify( clientes ), 'utf-8' );
-            return clientes;
+            await fsp.writeFile( path, JSON.stringify( clients ), 'utf-8' );
+            return clients;
         } catch (error) {
             throw error;            
         }
     },
 
-    criarDiretorio: async function ( path ){
+    createDir: async function ( path ){
         try {
             await fsp.access( 'data', F_OK );
             return console.log( 'Diretório já existe.')
